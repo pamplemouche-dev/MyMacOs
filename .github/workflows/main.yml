@@ -1,0 +1,44 @@
+name: Build MonOS ISO
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential gcc mtools xorriso grub-pc-bin grub-common
+
+    - name: Setup RootFS
+      run: chmod +x bootstrap.sh && ./bootstrap.sh
+
+    - name: Compile OS
+      run: make
+
+    - name: Create ISO Image
+      run: |
+        mkdir -p iso/boot/grub
+        cp RootFS/System/Library/Kernels/kernel iso/boot/kernel.bin
+        echo 'set timeout=0' > iso/boot/grub/grub.cfg
+        echo 'set default=0' >> iso/boot/grub/grub.cfg
+        echo 'menuentry "MonOS" {' >> iso/boot/grub/grub.cfg
+        echo '  multiboot /boot/kernel.bin' >> iso/boot/grub/grub.cfg
+        echo '  boot' >> iso/boot/grub/grub.cfg
+        echo '}' >> iso/boot/grub/grub.cfg
+        grub-mkrescue -o MonOS-installer.iso iso
+
+    - name: Upload ISO Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MonOS-Installer-ISO
+        path: MonOS-installer.iso

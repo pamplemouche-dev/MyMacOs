@@ -18,8 +18,10 @@ setup:
 	mkdir -p $(ROOTFS)/usr/bin
 
 kernel:
-	@echo "Compilation du noyau..."
-	# Commande de compilation du noyau ici
+	@echo "[2/4] Compilation du noyau (Kernel)..."
+	mkdir -p $(ROOTFS)/System/Library/Kernels
+	# On simule la compilation en créant un fichier binaire vide pour l'instant
+	dd if=/dev/zero of=$(ROOTFS)/System/Library/Kernels/kernel bs=1024 count=1
 
 userland:
 	@echo "Compilation des utilitaires de base..."

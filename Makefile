@@ -17,12 +17,16 @@ setup:
 	mkdir -p $(ROOTFS)/Users/Shared
 	mkdir -p $(ROOTFS)/usr/bin
 
+# Remplace ta section kernel par celle-ci :
 kernel:
-	@echo "[2/4] Compilation du noyau (Kernel)..."
+	@echo "[2/4] Compilation du vrai noyau MonOS..."
 	mkdir -p $(ROOTFS)/System/Library/Kernels
-	# On simule la compilation en créant un fichier binaire vide pour l'instant
-	dd if=/dev/zero of=$(ROOTFS)/System/Library/Kernels/kernel bs=1024 count=1
-
+	# On compile l'assembleur
+	nasm -f elf32 $(KRNL_SRC)/src/boot.s -o boot.o
+	# On compile le C
+	gcc -m32 -c $(KRNL_SRC)/src/kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+	# On lie le tout pour faire le binaire final
+	ld -m elf_i386 -T linker.ld -o $(ROOTFS)/System/Library/Kernels/kernel boot.o kernel.o
 userland:
 	@echo "Compilation des utilitaires de base..."
 	gcc $(USER_SRC)/init.c -o $(ROOTFS)/sbin/init
